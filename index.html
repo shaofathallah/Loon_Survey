@@ -1,1 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick Survey — 2 minutes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root {
+  --bg: #f5f5f7; --surface: #fff; --text: #1d1d1f; --sub: #86868b;
+  --border: rgba(0,0,0,0.09); --accent: #dc0008; --accent-h: #ff1a20;
+  --radius: 20px; --ease: cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="dark"] {
+  --bg: #0a0a0a; --surface: #1c1c1e; --text: #f5f5f7; --sub: #a1a1a6;
+  --border: rgba(255,255,255,0.10); --accent: #ff3b3f; --accent-h: #ff5c5f;
+}
+
+html, body { height: 100%; font-family: 'Inter', -apple-system, sans-serif; }
+body { background: var(--bg); color: var(--text); overflow: hidden; transition: background .35s, color .35s; }
+
+/* ── Top bar ── */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; justify-content: flex-end; padding: 14px 20px; pointer-events: none;
+}
+.theme-btn {
+  pointer-events: all; background: rgba(255,255,255,0.75);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 6px 16px; font-family: inherit; font-size: 12px; font-weight: 500;
+  color: var(--text); cursor: pointer; backdrop-filter: blur(16px); transition: all .2s;
+}
+[data-theme="dark"] .theme-btn { background: rgba(30,30,32,0.75); }
+.theme-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── Viewport & slides ── */
+#viewport { position: relative; width: 100%; height: 100vh; overflow: hidden; }
+.slide {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 72px 20px 24px;
+  transform: translateY(100%); opacity: 0; pointer-events: none;
+  will-change: transform, opacity;
+}
+.slide.active { transform: translateY(0); opacity: 1; pointer-events: all; }
+
+/* ── Card ── */
+.card {
+  background: var(--surface); border-radius: 28px;
+  box-shadow: 0 8px 48px rgba(0,0,0,.10);
+  padding: clamp(20px,4vw,40px) clamp(18px,4vw,40px);
+  width: 100%; max-width: 560px;
+  max-height: calc(100vh - 96px); overflow-y: auto;
+  scrollbar-width: none; transition: background .35s;
+}
+.card::-webkit-scrollbar { display: none; }
+
+.step-label { font-size: 11px; font-weight: 600; letter-spacing: .11em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+.question { font-size: clamp(16px,3vw,21px); font-weight: 700; letter-spacing: -.02em; line-height: 1.25; margin-bottom: 14px; }
+
+/* ── Progress dots ── */
+.progress { display: flex; gap: 5px; margin-bottom: 14px; flex-wrap: wrap; }
+.dot { height: 5px; width: 5px; border-radius: 3px; background: var(--border); cursor: pointer; transition: all .3s; flex-shrink: 0; }
+.dot.done { background: rgba(220,0,8,.35); }
+.dot.current { background: var(--accent); width: 18px; }
+
+/* ── Nav ── */
+.nav { display: flex; gap: 10px; margin-top: 16px; }
+.btn {
+  height: 44px; padding: 0 22px; border-radius: 999px; border: none;
+  font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+  display: inline-flex; align-items: center; transition: all .2s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-h); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(220,0,8,.3); }
+.btn-ghost { background: rgba(128,128,128,.08); color: var(--sub); border: 1.5px solid var(--border); }
+.btn-ghost:hover { color: var(--text); border-color: var(--text); transform: translateY(-1px); }
+
+/* ── Other textarea ── */
+.other-label { font-size: 12px; color: var(--sub); font-style: italic; margin-bottom: 6px; margin-top: 12px; }
+.other-input {
+  width: 100%; min-height: 56px; resize: vertical; padding: 10px 13px;
+  border-radius: 13px; border: 1.5px solid var(--border); background: transparent;
+  color: var(--text); font-family: inherit; font-size: 13px; outline: none;
+  transition: border-color .18s, background .18s;
+}
+.other-input:focus { border-color: var(--accent); background: rgba(220,0,8,.04); }
+.other-input::placeholder { color: var(--sub); }
+
+/* ── Mode select ── */
+.intro-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+.intro-title { font-size: clamp(22px,5vw,34px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; margin-bottom: 10px; }
+.intro-sub { font-size: 14px; color: var(--sub); line-height: 1.65; margin-bottom: 20px; }
+.intro-meta { display: flex; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+.meta-item { font-size: 12px; color: var(--sub); display: flex; align-items: center; gap: 5px; }
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mode-card {
+  border: 2px solid var(--border); border-radius: 18px; padding: 20px 14px;
+  cursor: pointer; text-align: center; transition: all .2s; background: transparent;
+  font-family: inherit; color: var(--text);
+}
+.mode-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(220,0,8,.12); }
+.mode-icon { font-size: 30px; margin-bottom: 8px; display: block; }
+.mode-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.mode-desc { font-size: 12px; color: var(--sub); line-height: 1.5; }
+
+/* ── Normal survey options ── */
+.options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.option {
+  display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+  border-radius: 13px; border: 1.5px solid var(--border); background: transparent;
+  color: var(--text); font-family: inherit; font-size: 13.5px; text-align: left;
+  cursor: pointer; transition: all .18s;
+}
+.option:hover { border-color: var(--accent-h); background: rgba(220,0,8,.05); transform: translateY(-1px); }
+.option.selected { border-color: var(--accent); background: rgba(220,0,8,.07); font-weight: 500; }
+.option-dot {
+  width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .18s;
+}
+.option.selected .option-dot { background: var(--accent); border-color: var(--accent); }
+.option.selected .option-dot::after { content:''; width:5px; height:5px; border-radius:50%; background:#fff; }
+
+/* ── Game canvas ── */
+.game-wrap {
+  position: relative; width: 100%; border-radius: 14px; overflow: hidden;
+  background: var(--bg); border: 1.5px solid var(--border); margin-bottom: 12px;
+}
+canvas.game-canvas { display: block; width: 100%; height: 200px; cursor: crosshair; }
+
+/* ── Answer chips ── */
+.answer-chips { display: flex; flex-direction: column; gap: 7px; }
+.chip {
+  padding: 10px 14px; border-radius: 12px; border: 1.5px solid var(--border);
+  background: transparent; color: var(--text); font-family: inherit; font-size: 13px;
+  font-weight: 400; text-align: left; cursor: pointer;
+  display: flex; align-items: center; gap: 10px; transition: all .18s;
+}
+.chip:hover { border-color: var(--accent); transform: translateX(3px); }
+.chip.selected { border-color: var(--accent); background: rgba(220,0,8,.07); font-weight: 500; }
+.chip-letter {
+  width: 22px; height: 22px; border-radius: 6px; background: var(--border);
+  font-size: 11px; font-weight: 700; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; transition: all .18s;
+}
+.chip.selected .chip-letter { background: var(--accent); color: #fff; }
+
+/* ── Email / TY ── */
+.surprise-header { font-size: clamp(18px,4vw,24px); font-weight: 700; letter-spacing: -.02em; margin-bottom: 10px; line-height: 1.2; }
+.surprise-sub { font-size: 14px; color: var(--sub); line-height: 1.65; margin-bottom: 16px; }
+.email-input {
+  width: 100%; padding: 13px 16px; border-radius: 13px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--text); font-family: inherit; font-size: 15px; outline: none;
+  margin-bottom: 8px; transition: border-color .18s, background .18s;
+}
+.email-input:focus { border-color: var(--accent); background: rgba(220,0,8,.04); }
+.email-input::placeholder { color: var(--sub); }
+.email-hint { font-size: 11.5px; color: var(--sub); font-style: italic; margin-bottom: 16px; }
+.ty-icon { font-size: 44px; margin-bottom: 14px; display: block; }
+.ty-title { font-size: clamp(20px,4vw,28px); font-weight: 700; letter-spacing: -.02em; margin-bottom: 8px; }
+.ty-sub { font-size: 14px; color: var(--sub); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">Dark mode</button>
+</div>
+
+<div id="viewport">
+
+  <!-- SLIDE 0: MODE SELECT -->
+  <div class="slide active" id="slide-0">
+    <div class="card">
+      <div class="intro-eyebrow">Quick survey</div>
+      <h1 class="intro-title">2 minutes of your time means a lot.</h1>
+      <p class="intro-sub">I'm doing research on how video creators work. No wrong answers, no sales pitch.</p>
+      <div class="intro-meta">
+        <span class="meta-item">⏱ ~2 min</span>
+        <span class="meta-item">✦ 10 questions</span>
+        <span class="meta-item">🔒 Anonymous</span>
+      </div>
+      <div class="mode-grid">
+        <button class="mode-card" onclick="startMode('normal')">
+          <span class="mode-icon">📋</span>
+          <div class="mode-title">Normal mode</div>
+          <div class="mode-desc">Choose your answers the classic way.</div>
+        </button>
+        <button class="mode-card" onclick="startMode('game')">
+          <span class="mode-icon">🏹</span>
+          <div class="mode-title">Game mode</div>
+          <div class="mode-desc">Play — shoot the right target to answer.</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: EMAIL -->
+  <div class="slide" id="slide-11">
+    <div class="card">
+      <div class="surprise-header">Want to see what I'm building? 🚀</div>
+      <p class="surprise-sub">I'm working on something made specifically for creators like you. Leave your email and I'll send you a first look — before anyone else.<br><br><em style="font-size:13px;">No spam. Just one message once it's ready.</em></p>
+      <input class="email-input" type="email" id="email-input" placeholder="your@email.com">
+      <p class="email-hint">Totally optional — hit Submit and you're done either way.</p>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(10)">Back</button>
+        <button class="btn btn-primary" onclick="submitSurvey()">Submit →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: THANK YOU -->
+  <div class="slide" id="slide-12">
+    <div class="card" style="text-align:center;">
+      <span class="ty-icon">🙏</span>
+      <div class="ty-title">Thank you.</div>
+      <p class="ty-sub">Your answers are exactly what I needed. They gonna be very helpful.</p>
+      <p style="font-size:13px;color:var(--sub);margin-top:12px;">You can close this tab now.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════
+   CONFIG
+════════════════════════════════ */
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzeiFmPVBDfHCPTPsqo7B0GsrokzaPHNAXYfuXaR5on5iCrugy4K_IRJG61HCq1KCFm/exec';
+const LETTERS   = ['A','B','C','D'];
+
+const QUESTIONS = [
+  { q:"What kind of video work do you do most?",                                                         opts:["Short social content for brands","TV commercials / longer ads","Product & e-commerce videos","Music videos / creative projects"] },
+  { q:"How big is your crew on a typical shoot?",                                                        opts:["Just me — I do everything solo","Me + 1 or 2 people","Small team of 3–5","It varies a lot by project"] },
+  { q:"What's the hardest part of your shooting day?",                                                   opts:["Setting up and moving gear between shots","Getting the lighting right","Managing time — shoots run long","Keeping the client happy on set"] },
+  { q:"How do you usually handle camera movement?",                                                      opts:["I mostly shoot handheld","I use a gimbal or stabilizer","I use a slider or dolly","I keep the camera static — no movement"] },
+  { q:"When you need a specific camera move, what happens?",                                             opts:["I do it myself — it takes a few tries","I hire someone to operate the camera","I skip it — too complicated solo","I plan shots that don't need movement"] },
+  { q:"Have you ever wanted a shot to move a specific way, but couldn't get it right?",                  opts:["Yes, often — it's frustrating","Sometimes — depends on the shoot","Rarely — I plan around it","No — I always find a way"] },
+  { q:"If a camera move doesn't work the first time, what do you do?",                                   opts:["I try again until it feels right","I simplify the move","I cut the shot from the plan","I add it in post with digital zoom"] },
+  { q:"If your camera could repeat the exact same move every time, how useful would that be?",           opts:["Very useful — I'd use it constantly","Useful for certain projects","Not sure — depends on the workflow","Not for me — I prefer the natural feel"] },
+  { q:"What would make your shoots faster and less stressful?",                                          opts:["Less gear to set up and carry","A way to plan shots before arriving on set","More control over camera movement","Better tools for solo shooting"] },
+  { q:"What does your ideal shooting setup look like in 2–3 years?",                                     opts:["Smaller, smarter gear — less to carry","More automation so I can focus on the creative","A bigger crew and bigger budget","Pretty much the same as now — it works"] }
+];
+
+/* ════════════════════════════════
+   STATE
+════════════════════════════════ */
+let mode      = 'normal';
+let current   = 0;
+let animating = false;
+const DUR     = 440;
+const TY      = 12;
+const answers = {};       // { 1: 'answer text', '1-other': '...' }
+const games   = {};       // { slideN: gameState }
+
+/* ════════════════════════════════
+   THEME
+════════════════════════════════ */
+const html = document.documentElement;
+const themeBtn = document.getElementById('theme-btn');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+html.setAttribute('data-theme', localStorage.getItem('survey-theme') || (prefersDark ? 'dark' : 'light'));
+updateThemeBtn();
+
+function toggleTheme() {
+  const d = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', d ? 'light' : 'dark');
+  localStorage.setItem('survey-theme', d ? 'light' : 'dark');
+  updateThemeBtn();
+  // Redraw active game canvas with new colors
+  if (mode === 'game' && games[current]) render(games[current]);
+}
+function updateThemeBtn() {
+  themeBtn.textContent = html.getAttribute('data-theme') === 'dark' ? 'Light mode' : 'Dark mode';
+}
+function isDark() { return html.getAttribute('data-theme') === 'dark'; }
+
+/* ════════════════════════════════
+   MODE SELECT
+════════════════════════════════ */
+function startMode(m) {
+  mode = m;
+  // Remove any previously built question slides (1–10)
+  for (let i = 1; i <= 10; i++) {
+    const old = document.getElementById('slide-' + i);
+    if (old) old.remove();
+  }
+  // Clear all saved answers and game states
+  for (const k in answers) delete answers[k];
+  for (const k in games)   delete games[k];
+  buildSlides();
+  goTo(1);
+}
+
+/* ════════════════════════════════
+   BUILD SLIDES
+════════════════════════════════ */
+function buildSlides() {
+  const anchor = document.getElementById('slide-11');
+  QUESTIONS.forEach((qd, i) => {
+    const n   = i + 1;
+    const div = document.createElement('div');
+    div.className = 'slide';
+    div.id = 'slide-' + n;
+    div.innerHTML = mode === 'normal' ? normalHTML(qd, n) : gameHTML(qd, n);
+    anchor.before(div);
+  });
+  updateProgress();
+}
+
+function normalHTML(qd, n) {
+  const opts = qd.opts.map(o => `
+    <button class="option" onclick="pick(this,${n})">
+      <span class="option-dot"></span>${o}
+    </button>`).join('');
+  const backDest = n === 1 ? 0 : n - 1;
+  return `<div class="card">
+    <div class="progress" id="prog-${n}"></div>
+    <div class="step-label">Question ${n} of 10</div>
+    <div class="question">${qd.q}</div>
+    <div class="options" data-q="${n}">${opts}</div>
+    <div class="other-label">Or tell me in your own words 👇</div>
+    <textarea class="other-input" placeholder="Write anything here..." data-q="${n}-other"></textarea>
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="goTo(${backDest})">Back</button>
+      <button class="btn btn-primary" onclick="goTo(${n+1})">Next →</button>
+    </div>
+  </div>`;
+}
+
+function gameHTML(qd, n) {
+  const chips = qd.opts.map((o, i) => `
+    <button class="chip" id="chip-${n}-${i}" onclick="chipPick(${n},${i})">
+      <span class="chip-letter">${LETTERS[i]}</span>${o}
+    </button>`).join('');
+  const backDest = n === 1 ? 0 : n - 1;
+  return `<div class="card">
+    <div class="progress" id="prog-${n}"></div>
+    <div class="step-label">Question ${n} of 10</div>
+    <div class="question">${qd.q}</div>
+    <div class="game-wrap">
+      <canvas class="game-canvas" id="canvas-${n}"></canvas>
+    </div>
+    <div class="answer-chips" id="chips-${n}" data-q="${n}">${chips}</div>
+    <div class="other-label">Or tell me in your own words 👇</div>
+    <textarea class="other-input" placeholder="Write anything here..." data-q="${n}-other"></textarea>
+    <div class="nav">
+      <button class="btn btn-ghost" onclick="goTo(${backDest})">Back</button>
+      <button class="btn btn-primary" onclick="goTo(${n+1})">Next →</button>
+    </div>
+  </div>`;
+}
+
+/* ════════════════════════════════
+   NAVIGATION
+════════════════════════════════ */
+function goTo(next) {
+  if (next === current || animating) return;
+  if (next < 0 || next > TY) return;
+  animating = true;
+  const fromEl = document.getElementById('slide-' + current);
+  const toEl   = document.getElementById('slide-' + next);
+  if (!toEl) { animating = false; return; }
+  const fwd = next > current;
+
+  fromEl.style.transition = `transform ${DUR}ms cubic-bezier(.4,0,.2,1), opacity ${DUR}ms cubic-bezier(.4,0,.2,1)`;
+  fromEl.style.transform  = fwd ? 'translateY(-100%)' : 'translateY(100%)';
+  fromEl.style.opacity    = '0'; fromEl.style.pointerEvents = 'none';
+
+  toEl.style.transition   = 'none';
+  toEl.style.transform    = fwd ? 'translateY(100%)' : 'translateY(-100%)';
+  toEl.style.opacity      = '0'; toEl.style.pointerEvents = 'none';
+  toEl.getBoundingClientRect();
+  toEl.style.transition   = `transform ${DUR}ms cubic-bezier(.4,0,.2,1), opacity ${DUR}ms cubic-bezier(.4,0,.2,1)`;
+  toEl.style.transform    = 'translateY(0)';
+  toEl.style.opacity      = '1'; toEl.style.pointerEvents = 'all';
+  toEl.classList.add('active');
+
+  setTimeout(() => {
+    fromEl.classList.remove('active');
+    fromEl.style.cssText = '';
+    animating = false;
+    if (mode === 'game' && next >= 1 && next <= 10) initCanvas(next);
+  }, DUR + 20);
+
+  current = next;
+  updateProgress();
+  restoreAnswers(next);
+}
+
+/* ════════════════════════════════
+   PROGRESS
+════════════════════════════════ */
+function updateProgress() {
+  for (let i = 1; i <= 10; i++) {
+    const el = document.getElementById('prog-' + i);
+    if (!el) continue;
+    el.innerHTML = '';
+    for (let d = 1; d <= 10; d++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (d < i ? ' done' : d === i ? ' current' : '');
+      const dest = d;
+      dot.addEventListener('click', () => goTo(dest));
+      el.appendChild(dot);
+    }
+  }
+}
+
+/* ════════════════════════════════
+   NORMAL MODE PICK
+════════════════════════════════ */
+function pick(btn, q) {
+  document.querySelectorAll('[data-q="'+q+'"] .option').forEach(o => o.classList.remove('selected'));
+  btn.classList.add('selected');
+  answers[q] = btn.querySelector('.option-dot').nextSibling.textContent.trim();
+}
+
+/* ════════════════════════════════
+   GAME MODE — CHIP PICK (from text)
+════════════════════════════════ */
+function chipPick(q, idx) {
+  setAnswer(q, idx);                 // save answer
+  updateChips(q, idx);               // highlight chip
+  shootArrow(games[q], idx, false);  // animate arrow
+}
+
+/* ════════════════════════════════
+   GAME MODE — CANVAS CLICK (from target)
+════════════════════════════════ */
+function canvasPick(q, idx) {
+  setAnswer(q, idx);    // save answer (overwrites previous)
+  updateChips(q, idx);  // highlight chip
+}
+
+function setAnswer(q, idx) {
+  answers[q] = QUESTIONS[q-1].opts[idx];
+}
+
+function updateChips(q, idx) {
+  document.querySelectorAll('#chips-'+q+' .chip').forEach((c, i) => {
+    c.classList.toggle('selected', i === idx);
+  });
+}
+
+/* ════════════════════════════════
+   RESTORE
+════════════════════════════════ */
+function restoreAnswers(n) {
+  if (n < 1 || n > 10) return;
+  const saved = answers[n];
+  if (!saved) return;
+  if (mode === 'normal') {
+    document.querySelectorAll('[data-q="'+n+'"] .option').forEach(o => {
+      o.classList.toggle('selected', o.querySelector('.option-dot').nextSibling.textContent.trim() === saved);
+    });
+  } else {
+    const idx = QUESTIONS[n-1].opts.indexOf(saved);
+    if (idx >= 0) updateChips(n, idx);
+  }
+  const ta = document.querySelector('[data-q="'+n+'-other"]');
+  if (ta && answers[n+'-other']) ta.value = answers[n+'-other'];
+}
+
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('other-input')) answers[e.target.dataset.q] = e.target.value;
+});
+
+/* ════════════════════════════════
+   ARCHERY ENGINE
+════════════════════════════════ */
+const TARGET_COLORS = ['#dc0008','#0071e3','#22c55e','#f59e0b'];
+
+function initCanvas(n) {
+  const canvas = document.getElementById('canvas-' + n);
+  if (!canvas) return;
+
+  const W  = canvas.offsetWidth;
+  const H  = 200;
+  const DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+
+  // Target positions — horizontal row, well spaced
+  const pad = 48, spacing = (W - pad*2) / 3;
+  const targets = QUESTIONS[n-1].opts.map((_, i) => ({
+    x: pad + i * spacing,
+    y: 68,
+    r: 26,
+    idx: i
+  }));
+
+  // Arrow starts at bottom-center
+  const g = {
+    ctx, W, H, n, targets,
+    arrow: { x: W/2, y: H - 18, angle: 0, flying: false,
+             tx: 0, ty: 0, progress: 0, targetIdx: -1 },
+    hitIdx: -1,  // which target was last hit (-1 = none)
+    animFrame: null
+  };
+  games[n] = g;
+
+  // Canvas click
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left);
+    const my = (e.clientY - rect.top);
+    // Check if click hits a target area
+    for (const t of g.targets) {
+      if (Math.hypot(mx - t.x, my - t.y) < t.r + 14) {
+        shootArrow(g, t.idx, true);
+        return;
+      }
+    }
+    // Otherwise just aim the arrow toward cursor
+    g.arrow.angle = Math.atan2(my - g.arrow.y, mx - g.arrow.x);
+    render(g);
+  });
+
+  // Mouse move to aim
+  canvas.addEventListener('mousemove', e => {
+    if (g.arrow.flying) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    g.arrow.angle = Math.atan2(my - g.arrow.y, mx - g.arrow.x);
+    render(g);
+  });
+
+  // Restore previously selected target if answer exists
+  const savedAns = answers[n];
+  if (savedAns) {
+    const idx = QUESTIONS[n-1].opts.indexOf(savedAns);
+    if (idx >= 0) g.hitIdx = idx;
+  }
+
+  render(g);
+}
+
+/* ── SHOOT ── */
+function shootArrow(g, targetIdx, fromCanvas) {
+  if (g.arrow.flying) return;
+  const t = g.targets[targetIdx];
+  const a = g.arrow;
+
+  a.flying = true;
+  a.startX = a.x; a.startY = a.y;
+  a.tx = t.x; a.ty = t.y;
+  a.progress = 0;
+  a.targetIdx = targetIdx;
+
+  // Clear previous hit visually — all targets reset, new one will show
+  g.hitIdx = -1;
+
+  function step() {
+    a.progress += 0.055;
+    if (a.progress >= 1) {
+      a.progress = 1;
+      a.flying   = false;
+      a.x = t.x; a.y = t.y;  // park arrow at target
+      g.hitIdx = targetIdx;
+      // Notify
+      if (fromCanvas) canvasPick(g.n, targetIdx);
+      render(g);
+      return;
+    }
+    render(g);
+    g.animFrame = requestAnimationFrame(step);
+  }
+  g.animFrame = requestAnimationFrame(step);
+}
+
+/* ── RENDER ── */
+function render(g) {
+  const { ctx, W, H, targets, arrow, hitIdx } = g;
+  ctx.clearRect(0, 0, W, H);
+
+  const dark = isDark();
+  const textCol   = dark ? '#f5f5f7' : '#1d1d1f';
+  const subCol    = dark ? '#a1a1a6' : '#86868b';
+  const surfCol   = dark ? '#2c2c2e' : '#ffffff';
+  const borderCol = dark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)';
+
+  // ── Draw targets ──
+  targets.forEach((t, i) => {
+    const isHit = hitIdx === i;
+    const col   = TARGET_COLORS[i];
+
+    // Outer ring
+    ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI*2);
+    ctx.fillStyle = isHit ? col : (dark ? '#2c2c2e' : '#f5f5f7');
+    ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.stroke();
+
+    // Middle ring
+    ctx.beginPath(); ctx.arc(t.x, t.y, t.r * 0.62, 0, Math.PI*2);
+    ctx.fillStyle = isHit ? 'rgba(255,255,255,.25)' : col + '22';
+    ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.stroke();
+
+    // Bull
+    ctx.beginPath(); ctx.arc(t.x, t.y, t.r * 0.28, 0, Math.PI*2);
+    ctx.fillStyle = isHit ? '#fff' : col;
+    ctx.fill();
+
+    // Letter label IN the target
+    ctx.font = `800 ${Math.round(t.r * 0.72)}px Inter, sans-serif`;
+    ctx.fillStyle = isHit ? col : surfCol;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(LETTERS[i], t.x, t.y);
+
+    // Answer label BELOW target
+    ctx.font = `500 10px Inter, sans-serif`;
+    ctx.fillStyle = isHit ? col : subCol;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    const label = QUESTIONS[g.n-1].opts[i];
+    const short = label.length > 18 ? label.slice(0,16) + '…' : label;
+    ctx.fillText(short, t.x, t.y + t.r + 6);
+  });
+
+  // ── Draw bow ──
+  const bowX = arrow.flying ? arrow.startX || W/2 : W/2;
+  const bowY = H - 18;
+  // Bow arc
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(bowX, bowY, 20, -Math.PI * 0.7, -Math.PI * 0.3);
+  ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4;
+  ctx.lineCap = 'round'; ctx.stroke();
+  ctx.restore();
+  // Bow string
+  ctx.beginPath();
+  ctx.moveTo(bowX - 14, bowY - 12); ctx.lineTo(bowX + 14, bowY - 12);
+  ctx.strokeStyle = borderCol; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // ── Draw arrow ──
+  if (!arrow.flying) {
+    // Idle / aiming: arrow at bow pointing toward cursor angle
+    const ax = bowX, ay = bowY - 12;
+    const ang = arrow.angle || -Math.PI/2; // default straight up
+    ctx.save();
+    ctx.translate(ax, ay);
+    ctx.rotate(ang);
+    // Shaft
+    ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(18, 0);
+    ctx.strokeStyle = '#888'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+    // Head
+    ctx.beginPath(); ctx.moveTo(18,0); ctx.lineTo(11,-4); ctx.lineTo(11,4); ctx.closePath();
+    ctx.fillStyle = '#aaa'; ctx.fill();
+    // Fletching
+    ctx.beginPath(); ctx.moveTo(-14,0); ctx.lineTo(-20,-5); ctx.moveTo(-14,0); ctx.lineTo(-20,5);
+    ctx.strokeStyle = '#dc0008'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
+
+    // Hint
+    ctx.font = '500 10px Inter, sans-serif';
+    ctx.fillStyle = subCol; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🏹 Shoot a target — or pick below', W/2, H - 8);
+
+  } else {
+    // Flying: interpolate position with arc
+    const px = arrow.startX + (arrow.tx - arrow.startX) * arrow.progress;
+    const py = arrow.startY + (arrow.ty - arrow.startY) * arrow.progress
+             - Math.sin(arrow.progress * Math.PI) * 30;
+    const ang = Math.atan2(arrow.ty - arrow.startY, arrow.tx - arrow.startX);
+    ctx.save();
+    ctx.translate(px, py); ctx.rotate(ang);
+    ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(14, 0);
+    ctx.strokeStyle = '#888'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(8,-4); ctx.lineTo(8,4); ctx.closePath();
+    ctx.fillStyle = '#aaa'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-12,0); ctx.lineTo(-18,-5); ctx.moveTo(-12,0); ctx.lineTo(-18,5);
+    ctx.strokeStyle = '#dc0008'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── If hit: draw embedded arrow in target ──
+  if (hitIdx >= 0 && !arrow.flying) {
+    const t = targets[hitIdx];
+    ctx.save();
+    ctx.translate(t.x, t.y); ctx.rotate(-Math.PI/2);
+    ctx.beginPath(); ctx.moveTo(0, -t.r - 14); ctx.lineTo(0, t.r * 0.2);
+    ctx.strokeStyle = '#666'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-t.r-14); ctx.lineTo(-4,-t.r-7); ctx.lineTo(4,-t.r-7); ctx.closePath();
+    ctx.fillStyle = '#aaa'; ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ════════════════════════════════
+   SUBMIT
+════════════════════════════════ */
+function submitSurvey() {
+  const email = document.getElementById('email-input').value.trim();
+  if (email) answers.email = email;
+  const payload = {
+    'Timestamp': new Date().toISOString(), 'Mode': mode,
+    'Q1 - Type of work':       answers[1]||'',  'Q1 - Other':  answers['1-other']||'',
+    'Q2 - Crew size':          answers[2]||'',  'Q2 - Other':  answers['2-other']||'',
+    'Q3 - Hardest part':       answers[3]||'',  'Q3 - Other':  answers['3-other']||'',
+    'Q4 - Camera movement':    answers[4]||'',  'Q4 - Other':  answers['4-other']||'',
+    'Q5 - When needing move':  answers[5]||'',  'Q5 - Other':  answers['5-other']||'',
+    'Q6 - Shot not working':   answers[6]||'',  'Q6 - Other':  answers['6-other']||'',
+    'Q7 - Move fails':         answers[7]||'',  'Q7 - Other':  answers['7-other']||'',
+    'Q8 - Repeatable move':    answers[8]||'',  'Q8 - Other':  answers['8-other']||'',
+    'Q9 - Faster shoots':      answers[9]||'',  'Q9 - Other':  answers['9-other']||'',
+    'Q10 - Ideal setup':       answers[10]||'', 'Q10 - Other': answers['10-other']||'',
+    'Email': answers.email||''
+  };
+  themeBtn.style.display = 'none';
+  goTo(12);
+  fetch(SHEET_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+    .catch(e => console.error(e));
+}
+
+/* ════════════════════════════════
+   KEYBOARD
+════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if ((e.key === 'ArrowDown' || e.key === 'Enter') && current < TY) goTo(current+1);
+  if (e.key === 'ArrowUp' && current > 0) goTo(current-1);
+});
+</script>
+</body>
+</html>
