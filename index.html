@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick Survey — 2 minutes</title>
+<style>
+
+/* ─── Reset ─────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Tokens ─────────────────────────── */
+:root {
+  --bg:              #f5f5f7;
+  --surface:         #ffffff;
+  --text:            #1d1d1f;
+  --sub:             #86868b;
+  --border:          rgba(0,0,0,0.09);
+  --accent:          #dc0008;
+  --accent-hover:    #ff1a20;
+  --selected-bg:     rgba(220,0,8,0.06);
+  --selected-border: #dc0008;
+  --radius-lg:       18px;
+  --radius-xl:       28px;
+  --radius-full:     999px;
+  --shadow-lg:       0 8px 48px rgba(0,0,0,0.10);
+  --ease:            cubic-bezier(0.4, 0, 0.2, 1);
+  --dur:             480ms;
+}
+
+[data-theme="dark"] {
+  --bg:              #0a0a0a;
+  --surface:         #1c1c1e;
+  --text:            #f5f5f7;
+  --sub:             #a1a1a6;
+  --border:          rgba(255,255,255,0.10);
+  --accent:          #ff3b3f;
+  --accent-hover:    #ff5c5f;
+  --selected-bg:     rgba(220,0,8,0.12);
+  --selected-border: #ff3b3f;
+  --shadow-lg:       0 8px 48px rgba(0,0,0,0.50);
+}
+
+/* ─── Base ─────────────────────────── */
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  transition: background 0.35s var(--ease), color 0.35s var(--ease);
+}
+
+/* ─── Viewport ─────────────────────── */
+#viewport {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ─── Slides ────────────────────────── */
+/* Default: waiting below */
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 20px 24px;
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  /* No CSS transition here — JS drives it with style.transition */
+}
+
+/* Active: center stage */
+.slide.active {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ─── Card ──────────────────────────── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: clamp(28px, 5vw, 48px) clamp(24px, 5vw, 48px);
+  width: 100%;
+  max-width: 580px;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  transition: background 0.35s var(--ease), box-shadow 0.35s var(--ease);
+  scrollbar-width: none;
+}
+.card::-webkit-scrollbar { display: none; }
+
+/* ─── Step label ────────────────────── */
+.step-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+/* ─── Question ──────────────────────── */
+.question {
+  font-size: clamp(19px, 3.2vw, 25px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-bottom: 24px;
+}
+
+/* ─── Options ───────────────────────── */
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 20px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 16px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+  /* Frosted glass hover */
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: border-color 0.18s var(--ease),
+              background 0.18s var(--ease),
+              box-shadow 0.18s var(--ease),
+              backdrop-filter 0.18s var(--ease),
+              transform 0.18s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.option:hover {
+  border-color: var(--accent-hover);
+  background: var(--selected-bg);
+  box-shadow: 0 4px 20px rgba(255,26,32,0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .option:hover {
+  box-shadow: 0 4px 20px rgba(255,26,32,0.22);
+}
+
+.option.selected {
+  border-color: var(--selected-border);
+  background: var(--selected-bg);
+  font-weight: 500;
+  box-shadow: 0 2px 12px rgba(220,0,8,0.10);
+}
+
+.option-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s var(--ease);
+}
+
+.option.selected .option-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.option.selected .option-dot::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* ─── Other textarea ─────────────────── */
+.other-label {
+  font-size: 12px;
+  color: var(--sub);
+  margin-bottom: 7px;
+  font-style: italic;
+}
+
+.other-input {
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  padding: 12px 15px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.18s var(--ease),
+              background 0.18s var(--ease),
+              box-shadow 0.18s var(--ease);
+}
+
+.other-input::placeholder { color: var(--sub); }
+
+.other-input:focus {
+  border-color: var(--accent);
+  background: var(--selected-bg);
+  box-shadow: 0 0 0 3px rgba(220,0,8,0.08);
+}
+
+/* ─── Nav ───────────────────────────── */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: var(--radius-full);
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease),
+              box-shadow 0.2s var(--ease),
+              background 0.2s var(--ease),
+              backdrop-filter 0.2s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(255,26,32,0.38);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.btn-ghost {
+  background: rgba(128,128,128,0.08);
+  color: var(--sub);
+  border: 1.5px solid var(--border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.btn-ghost:hover {
+  background: rgba(128,128,128,0.16);
+  color: var(--text);
+  border-color: rgba(128,128,128,0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+/* ─── Progress dots ─────────────────── */
+.progress {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.dot {
+  height: 5px;
+  width: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  transition: all 0.3s var(--ease);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.dot:hover { background: var(--sub); transform: scaleY(1.4); }
+.dot.done    { background: rgba(220,0,8,0.35); width: 5px; }
+.dot.current { background: var(--accent); width: 18px; }
+
+/* ─── Intro slide ────────────────────── */
+.intro-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.intro-title {
+  font-size: clamp(26px, 5vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+.intro-sub {
+  font-size: 14.5px;
+  color: var(--sub);
+  line-height: 1.65;
+  margin-bottom: 28px;
+}
+.intro-meta {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.meta-item {
+  font-size: 12px;
+  color: var(--sub);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ─── Thank-you slide ────────────────── */
+.ty-icon  { font-size: 44px; margin-bottom: 18px; display: block; }
+.ty-title { font-size: clamp(22px, 4vw, 30px); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 10px; }
+.ty-sub   { font-size: 15px; color: var(--sub); line-height: 1.6; margin-bottom: 24px; }
+
+/* ─── Slide 11 (email) ───────────────── */
+.surprise-header {
+  font-size: clamp(22px, 4vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+.surprise-sub {
+  font-size: 14px;
+  color: var(--sub);
+  line-height: 1.65;
+  margin-bottom: 20px;
+}
+.email-input {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.18s var(--ease),
+              background 0.18s var(--ease),
+              box-shadow 0.18s var(--ease);
+  margin-bottom: 10px;
+}
+.email-input::placeholder { color: var(--sub); }
+.email-input:focus {
+  border-color: var(--accent);
+  background: var(--selected-bg);
+  box-shadow: 0 0 0 3px rgba(220,0,8,0.08);
+}
+.email-hint {
+  font-size: 11.5px;
+  color: var(--sub);
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+/* ─── Top bar ────────────────────────── */
+#topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 20px;
+  pointer-events: none;
+}
+
+.theme-btn {
+  pointer-events: all;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  transition: all 0.2s var(--ease);
+}
+[data-theme="dark"] .theme-btn {
+  background: rgba(30,30,32,0.7);
+}
+.theme-btn:hover {
+  background: var(--accent-hover);
+  color: #fff;
+  border-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(255,26,32,0.30);
+}
+
+/* ─── Mobile ─────────────────────────── */
+@media (max-width: 480px) {
+  .card { border-radius: 20px; }
+  .option { font-size: 13px; padding: 12px 13px; }
+  .intro-meta { gap: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide, .option, .btn { transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div id="topbar">
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">Dark mode</button>
+</div>
+
+<div id="viewport">
+
+  <!-- ── SLIDE 0 : Intro ── -->
+  <div class="slide active" id="slide-0">
+    <div class="card">
+      <div class="intro-eyebrow">Quick survey</div>
+      <h1 class="intro-title">2 minutes of your time means a lot.</h1>
+      <p class="intro-sub">
+        I'm doing research on how video creators work. Your answers are genuinely useful to me — no wrong answers, no sales pitch.
+      </p>
+      <div class="intro-meta">
+        <span class="meta-item">⏱ ~2 minutes</span>
+        <span class="meta-item">✦ 10 questions</span>
+        <span class="meta-item">🔒 Anonymous</span>
+      </div>
+      <button class="btn btn-primary" onclick="goTo(1)">Start &rarr;</button>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 1 ── -->
+  <div class="slide" id="slide-1">
+    <div class="card">
+      <div class="progress" id="prog-1"></div>
+      <div class="step-label">Question 1 of 10</div>
+      <div class="question">What kind of video work do you do most?</div>
+      <div class="options" data-q="1">
+        <button class="option" onclick="pick(this,1)"><span class="option-dot"></span>Short social content for brands</button>
+        <button class="option" onclick="pick(this,1)"><span class="option-dot"></span>TV commercials / longer ads</button>
+        <button class="option" onclick="pick(this,1)"><span class="option-dot"></span>Product &amp; e-commerce videos</button>
+        <button class="option" onclick="pick(this,1)"><span class="option-dot"></span>Music videos / creative projects</button>
+      </div>
+      <div class="other-label">Or tell me in your own words 👇</div>
+      <textarea class="other-input" placeholder="Write anything here..." data-q="1-other"></textarea>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(0)">Back</button>
+        <button class="btn btn-primary" onclick="goTo(2)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 2 ── -->
+  <div class="slide" id="slide-2">
+    <div class="card">
+      <div class="progress" id="prog-2"></div>
+      <div class="step-label">Question 2 of 10</div>
+      <div class="question">How big is your crew on a typical shoot?</div>
+      <div class="options" data-q="2">
+        <button class="option" onclick="pick(this,2)"><span class="option-dot"></span>Just me — I do everything solo</button>
+        <button class="option" onclick="pick(this,2)"><span class="option-dot"></span>Me + 1 or 2 people</button>
+        <button class="option" onclick="pick(this,2)"><span class="option-dot"></span>Small team of 3–5</button>
+        <button class="option" onclick="pick(this,2)"><span class="option-dot"></span>It varies a lot by project</button>
+      </div>
+      <div class="other-label">Or tell me in your own words 👇</div>
+      <textarea class="other-input" placeholder="Write anything here..." data-q="2-other"></textarea>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(1)">Back</button>
+        <button class="btn btn-primary" onclick="goTo(3)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 3 ── -->
+  <div class="slide" id="slide-3">
+    <div class="card">
+      <div class="progress" id="prog-3"></div>
+      <div class="step-label">Question 3 of 10</div>
+      <div class="question">What's the hardest part of your shooting day?</div>
+      <div class="options" data-q="3">
+        <button class="option" onclick="pick(this,3)"><span class="option-dot"></span>Setting up and moving gear between shots</button>
+        <button class="option" onclick="pick(this,3)"><span class="option-dot"></span>Getting the lighting right</button>
+        <button class="option" onclick="pick(this,3)"><span class="option-dot"></span>Managing time — shoots run long</button>
+        <button class="option" onclick="pick(this,3)"><span class="option-dot"></span>Keeping the client happy on set</button>
+      </div>
+      <div class="other-label">Or tell me in your own words 👇</div>
+      <textarea class="other-input" placeholder="Write anything here..." data-q="3-other"></textarea>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(2)">Back</button>
+        <button class="btn btn-primary" onclick="goTo(4)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 4 ── -->
+  <div class="slide" id="slide-4">
+    <div class="card">
+      <div class="progress" id="prog-4"></div>
+      <div class="step-label">Question 4 of 10</div>
+      <div class="question">How do you usually handle camera movement?</div>
+      <div class="options" data-q="4">
+        <button class="option" onclick="pick(this,4)"><span class="option-dot"></span>I mostly shoot handheld</button>
+        <button class="option" onclick="pick(this,4)"><span class="option-dot"></span>I use a gimbal or stabilizer</button>
+        <button class="option" onclick="pick(this,4)"><span class="option-dot"></span>I use a slider or dolly</button>
+        <button class="option" onclick="pick(this,4)"><span class="option-dot"></span>I keep the camera static — no movement</button>
+      </div>
+      <div class="other-label">Or tell me in your own words 👇</div>
+      <textarea class="other-input" placeholder="Write anything here..." data-q="4-other"></textarea>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(3)">Back</button>
+        <button class="btn btn-primary" onclick="goTo(5)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 5 ── -->
+  <div class="slide" id="slide-5">
+    <div class="card">
+      <div class="progress" id="prog-5"></div>
+      <div class="step-label">Question 5 of 10</div>
+      <div class="question">When you need a specific camera move, what happens?</div>
+      <div class="options" data-q="5">
+        <button class="option" onclick="pick(this,5)"><span class="option-dot"></span>I do it myself — it takes a few tries</button>
+        <button class="option" onclick="pick(this,5)"><span class="option-dot"></span>I hire someone to operate the camera</button>
+        <button class="option" onclick="pick(this,5)"><span class="option-dot"></span>I skip it — too complicated solo</button>
+        <button class="option" onclick="pick(this,5)"><span class="option-dot"></span>I plan shots that don't need movement</button>
+      </div>
+      <div class="other-label">Or tell me in your own words 👇</div>
+      <textarea class="other-input" placeholder="Write anything here..." data-q="5-other"></textarea>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(4)">Back</button>
+        <button class="btn btn-primary" onclick="goTo(6)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 6 ── -->
+  <div class="slide" id="slide-6">
+    <div class="card">
+      <div class="progress" id="prog-6"></div>
+      <div class="step-label">Question 6 of 10</div>
+      <div class="question">Have you ever wanted a shot to move a specific way, but couldn't get it right?</div>
+      <div class="options" data-q="6">
+        <button class="option" onclick="pick(this,6)"><span class="option-dot"></span>Yes, often — it's frustrating</button>
+        <button class="option" onclick="pick(this,6)"><span class="option-dot"></span>Sometimes — depends on the shoot</button>
+        <button class="option" onclick="pick(this,6)"><span class="option-dot"></span>Rarely — I plan around it</button>
+        <button class="option" onclick="pick(this,6)"><span class="option-dot"></span>No — I always find a way</button>
+      </div>
+      <div class="other-label">Want to add more context? 👇</div>
+      <textarea class="other-input" placeholder="Write anything here..." data-q="6-other"></textarea>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(5)">Back</button>
+        <button class="btn btn-primary" onclick="goTo(7)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 7 ── -->
+  <div class="slide" id="slide-7">
+    <div class="card">
+      <div class="progress" id="prog-7"></div>
+      <div class="step-label">Question 7 of 10</div>
+      <div class="question">If a camera move doesn't work the first time, what do you do?</div>
+      <div class="options" data-q="7">
+        <button class="option" onclick="pick(this,7)"><span class="option-dot"></span>I try again until it feels right</button>
+        <button class="option" onclick="pick(this,7)"><span class="option-dot"></span>I simplify the move</button>
+        <button class="option" onclick="pick(this,7)"><span class="option-dot"></span>I cut the shot from the plan</button>
+        <button class="option" onclick="pick(this,7)"><span class="option-dot"></span>I add it in post with digital zoom</button>
+      </div>
+      <div class="other-label">Or tell me in your own words 👇</div>
+      <textarea class="other-input" placeholder="Write anything here..." data-q="7-other"></textarea>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(6)">Back</button>
+        <button class="btn btn-primary" onclick="goTo(8)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 8 ── -->
+  <div class="slide" id="slide-8">
+    <div class="card">
+      <div class="progress" id="prog-8"></div>
+      <div class="step-label">Question 8 of 10</div>
+      <div class="question">If your camera could repeat the exact same move every time, how useful would that be?</div>
+      <div class="options" data-q="8">
+        <button class="option" onclick="pick(this,8)"><span class="option-dot"></span>Very useful — I'd use it constantly</button>
+        <button class="option" onclick="pick(this,8)"><span class="option-dot"></span>Useful for certain projects</button>
+        <button class="option" onclick="pick(this,8)"><span class="option-dot"></span>Not sure — depends on the workflow</button>
+        <button class="option" onclick="pick(this,8)"><span class="option-dot"></span>Not for me — I prefer the natural feel</button>
+      </div>
+      <div class="other-label">Or tell me in your own words 👇</div>
+      <textarea class="other-input" placeholder="Write anything here..." data-q="8-other"></textarea>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(7)">Back</button>
+        <button class="btn btn-primary" onclick="goTo(9)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 9 ── -->
+  <div class="slide" id="slide-9">
+    <div class="card">
+      <div class="progress" id="prog-9"></div>
+      <div class="step-label">Question 9 of 10</div>
+      <div class="question">What would make your shoots faster and less stressful?</div>
+      <div class="options" data-q="9">
+        <button class="option" onclick="pick(this,9)"><span class="option-dot"></span>Less gear to set up and carry</button>
+        <button class="option" onclick="pick(this,9)"><span class="option-dot"></span>A way to plan shots before arriving on set</button>
+        <button class="option" onclick="pick(this,9)"><span class="option-dot"></span>More control over camera movement</button>
+        <button class="option" onclick="pick(this,9)"><span class="option-dot"></span>Better tools for solo shooting</button>
+      </div>
+      <div class="other-label">Or tell me in your own words 👇</div>
+      <textarea class="other-input" placeholder="Write anything here..." data-q="9-other"></textarea>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(8)">Back</button>
+        <button class="btn btn-primary" onclick="goTo(10)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 10 ── -->
+  <div class="slide" id="slide-10">
+    <div class="card">
+      <div class="progress" id="prog-10"></div>
+      <div class="step-label">Question 10 of 10</div>
+      <div class="question">What does your ideal shooting setup look like in 2–3 years?</div>
+      <div class="options" data-q="10">
+        <button class="option" onclick="pick(this,10)"><span class="option-dot"></span>Smaller, smarter gear — less to carry</button>
+        <button class="option" onclick="pick(this,10)"><span class="option-dot"></span>More automation so I can focus on the creative</button>
+        <button class="option" onclick="pick(this,10)"><span class="option-dot"></span>A bigger crew and bigger budget</button>
+        <button class="option" onclick="pick(this,10)"><span class="option-dot"></span>Pretty much the same as now — it works</button>
+      </div>
+      <div class="other-label">Or tell me in your own words 👇</div>
+      <textarea class="other-input" placeholder="Write anything here..." data-q="10-other"></textarea>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(9)">Back</button>
+        <button class="btn btn-primary" onclick="goTo(11)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 11 : Email ── -->
+  <div class="slide" id="slide-11">
+    <div class="card">
+      <div class="surprise-header">Want to see what I'm building? 🚀</div>
+      <p class="surprise-sub">
+        I'm working on something made specifically for creators like you. Leave your email and I'll send you a first look — before anyone else.<br><br>
+        <em style="font-size:13px;">No spam. Just one message once it's ready.</em>
+      </p>
+      <input class="email-input" type="email" id="email-input" placeholder="your@email.com">
+      <p class="email-hint">Totally optional — hit Submit and you're done either way.</p>
+      <div class="nav">
+        <button class="btn btn-ghost" onclick="goTo(10)">Back</button>
+        <button class="btn btn-primary" onclick="submit()">Submit &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 12 : Thank you ── -->
+  <div class="slide" id="slide-12">
+    <div class="card" style="text-align:center;">
+      <span class="ty-icon">🙏</span>
+      <div class="ty-title">Thank you.</div>
+      <p class="ty-sub">Your answers are exactly what I needed. They gonna be very helpful.</p>
+      <p style="font-size:13px;color:var(--sub);">You can close this tab now.</p>
+    </div>
+  </div>
+
+</div><!-- /viewport -->
+
+<script>
+/* ─────────────────────────────────────────
+   STATE
+───────────────────────────────────────── */
+const TOTAL   = 10;        // question slides 1–10
+const LAST    = 11;        // email slide
+const TY      = 12;        // thank-you
+let current   = 0;
+let animating = false;
+const answers = {};
+
+/* ─────────────────────────────────────────
+   THEME — detect browser preference
+───────────────────────────────────────── */
+const html     = document.documentElement;
+const themeBtn = document.getElementById('theme-btn');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const saved       = localStorage.getItem('survey-theme');
+html.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+updateThemeBtn();
+
+function toggleTheme() {
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  localStorage.setItem('survey-theme', isDark ? 'light' : 'dark');
+  updateThemeBtn();
+}
+function updateThemeBtn() {
+  themeBtn.textContent = html.getAttribute('data-theme') === 'dark' ? 'Light mode' : 'Dark mode';
+}
+
+/* ─────────────────────────────────────────
+   NAVIGATION — clean, robust slide engine
+───────────────────────────────────────── */
+const DUR = 480; // ms — match CSS var(--dur)
+
+function goTo(next) {
+  if (next === current) return;
+  if (animating) return;
+  if (next < 0 || next > TY) return;
+
+  animating = true;
+  const fromEl = document.getElementById('slide-' + current);
+  const toEl   = document.getElementById('slide-' + next);
+  const forward = next > current;
+
+  // ── Animate OUT the current slide ──
+  // Current slide is at translateY(0). Move it up (forward) or down (back).
+  fromEl.style.transition = `transform ${DUR}ms cubic-bezier(0.4,0,0.2,1), opacity ${DUR}ms cubic-bezier(0.4,0,0.2,1)`;
+  fromEl.style.transform  = forward ? 'translateY(-100%)' : 'translateY(100%)';
+  fromEl.style.opacity    = '0';
+  fromEl.style.pointerEvents = 'none';
+
+  // ── Prepare the incoming slide ──
+  // Place it on the opposite side without a transition first.
+  toEl.style.transition  = 'none';
+  toEl.style.transform   = forward ? 'translateY(100%)' : 'translateY(-100%)';
+  toEl.style.opacity     = '0';
+  toEl.style.pointerEvents = 'none';
+
+  // Force repaint so the position is applied before we animate.
+  toEl.getBoundingClientRect();
+
+  // ── Animate IN the incoming slide ──
+  toEl.style.transition  = `transform ${DUR}ms cubic-bezier(0.4,0,0.2,1), opacity ${DUR}ms cubic-bezier(0.4,0,0.2,1)`;
+  toEl.style.transform   = 'translateY(0)';
+  toEl.style.opacity     = '1';
+  toEl.style.pointerEvents = 'all';
+  toEl.classList.add('active');
+
+  // ── Cleanup after animation ──
+  setTimeout(() => {
+    fromEl.classList.remove('active');
+    fromEl.style.cssText = ''; // reset all inline styles — goes back to default (translateY 100%)
+    animating = false;
+  }, DUR + 20);
+
+  current = next;
+  updateProgress();
+  restoreAnswers(next);
+}
+
+/* ─────────────────────────────────────────
+   PROGRESS DOTS
+───────────────────────────────────────── */
+function updateProgress() {
+  for (let i = 1; i <= TOTAL; i++) {
+    const el = document.getElementById('prog-' + i);
+    if (!el) continue;
+    el.innerHTML = '';
+    for (let d = 1; d <= TOTAL; d++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (d < i ? ' done' : d === i ? ' current' : '');
+      dot.title = 'Question ' + d;
+      const dest = d;
+      dot.addEventListener('click', () => goTo(dest));
+      el.appendChild(dot);
+    }
+  }
+}
+
+/* ─────────────────────────────────────────
+   OPTION SELECTION
+───────────────────────────────────────── */
+function pick(btn, q) {
+  document.querySelectorAll('[data-q="' + q + '"] .option').forEach(o => o.classList.remove('selected'));
+  btn.classList.add('selected');
+  answers[q] = btn.querySelector('.option-dot').nextSibling.textContent.trim();
+}
+
+function restoreAnswers(index) {
+  // Restore option selection
+  const opts = document.querySelectorAll('[data-q="' + index + '"] .option');
+  opts.forEach(o => {
+    const label = o.querySelector('.option-dot').nextSibling.textContent.trim();
+    o.classList.toggle('selected', label === answers[index]);
+  });
+  // Restore textarea
+  const key = index + '-other';
+  const ta  = document.querySelector('[data-q="' + key + '"]');
+  if (ta && answers[key] !== undefined) ta.value = answers[key];
+}
+
+// Save textarea content on input
+document.querySelectorAll('.other-input').forEach(ta => {
+  ta.addEventListener('input', () => {
+    answers[ta.dataset.q] = ta.value;
+  });
+});
+
+/* ─────────────────────────────────────────
+   KEYBOARD (arrow keys only, no scroll)
+───────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  const isTyping = ['INPUT','TEXTAREA'].includes(document.activeElement.tagName);
+  if (isTyping) return;
+  if ((e.key === 'ArrowDown' || e.key === 'Enter') && current < TY) goTo(current + 1);
+  if (e.key === 'ArrowUp' && current > 0) goTo(current - 1);
+});
+
+/* ─────────────────────────────────────────
+   SUBMIT
+───────────────────────────────────────── */
+function submit() {
+  const email = document.getElementById('email-input').value.trim();
+  if (email) answers.email = email;
+  console.log('Survey answers:', answers); // plug in your backend here
+  themeBtn.style.display = 'none';
+  goTo(TY);
+}
+
+/* ─────────────────────────────────────────
+   INIT
+───────────────────────────────────────── */
+updateProgress();
+</script>
+</body>
+</html>
