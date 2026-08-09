@@ -101,13 +101,7 @@ body { background: var(--bg); color: var(--text); overflow: hidden; transition: 
   font-family: inherit; color: var(--text);
 }
 .mode-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(220,0,8,.12); }
-.mode-card:hover .mode-icon { animation: iconBounce .55s ease; }
-@keyframes iconBounce {
-  0%, 100% { transform: translateY(0) rotate(0); }
-  30% { transform: translateY(-6px) rotate(-8deg); }
-  60% { transform: translateY(1px) rotate(5deg); }
-}
-.mode-icon { font-size: 30px; margin-bottom: 8px; display: block; transition: transform .2s; }
+.mode-icon { font-size: 30px; margin-bottom: 8px; display: block; }
 .mode-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
 .mode-desc { font-size: 12px; color: var(--sub); line-height: 1.5; }
 
@@ -132,7 +126,6 @@ body { background: var(--bg); color: var(--text); overflow: hidden; transition: 
 .game-wrap {
   position: relative; width: 100%; border-radius: 14px; overflow: hidden;
   background: var(--bg); border: 1.5px solid var(--border); margin-bottom: 12px;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0), 0 4px 18px rgba(0,0,0,.06);
 }
 canvas.game-canvas { display: block; width: 100%; height: 200px; cursor: crosshair; }
 
@@ -185,8 +178,8 @@ canvas.game-canvas { display: block; width: 100%; height: 200px; cursor: crossha
       <h1 class="intro-title">2 minutes of your time means a lot.</h1>
       <p class="intro-sub">I'm doing research on how video creators work. No wrong answers, no sales pitch.</p>
       <div class="intro-meta">
-        <span class="meta-item">⏱ ~3 min</span>
-        <span class="meta-item" id="q-count">✦ 11 questions</span>
+        <span class="meta-item">⏱ ~2 min</span>
+        <span class="meta-item">✦ 10 questions</span>
         <span class="meta-item">🔒 Anonymous</span>
       </div>
       <div class="mode-grid">
@@ -204,30 +197,22 @@ canvas.game-canvas { display: block; width: 100%; height: 200px; cursor: crossha
     </div>
   </div>
 
-  <!-- SLIDE 12: EMAIL -->
-  <div class="slide" id="slide-12">
+  <!-- SLIDE 11: EMAIL -->
+  <div class="slide" id="slide-11">
     <div class="card">
       <div class="surprise-header">Want to see what I'm building? 🚀</div>
-      <p class="surprise-sub">I'm working on something made specifically for creators like you.<br><br><em style="font-size:15px;">No spam either way — at most one message.</em></p>
+      <p class="surprise-sub">I'm working on something made specifically for creators like you. Leave your email and I'll send you a first look — before anyone else.<br><br><em style="font-size:13px;">No spam. Just one message once it's ready.</em></p>
       <input class="email-input" type="email" id="email-input" placeholder="your@email.com">
-      <div class="options" id="call-optin-group" style="margin-bottom:8px;">
-        <button class="option" onclick="pickCallOptin(this,'call')">
-          <span class="option-dot"></span>I'm open to a 15-minute call about what I actually need
-        </button>
-        <button class="option" onclick="pickCallOptin(this,'updates')">
-          <span class="option-dot"></span>Just send me a first look when it's ready
-        </button>
-      </div>
       <p class="email-hint">Totally optional — hit Submit and you're done either way.</p>
       <div class="nav">
-        <button class="btn btn-ghost" onclick="goTo(11)">Back</button>
+        <button class="btn btn-ghost" onclick="goTo(10)">Back</button>
         <button class="btn btn-primary" onclick="submitSurvey()">Submit →</button>
       </div>
     </div>
   </div>
 
-  <!-- SLIDE 13: THANK YOU -->
-  <div class="slide" id="slide-13">
+  <!-- SLIDE 12: THANK YOU -->
+  <div class="slide" id="slide-12">
     <div class="card" style="text-align:center;">
       <span class="ty-icon">🙏</span>
       <div class="ty-title">Thank you.</div>
@@ -246,21 +231,17 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzeiFmPVBDfHCPTPsqo7B
 const LETTERS   = ['A','B','C','D'];
 
 const QUESTIONS = [
-  { q:"What kind of videos do you make most often?",                                    opts:["Short social videos for brands","TV ads or longer ads","Product or online store videos","Music videos or personal projects"] },
-  { q:"How many video shoots have you done in the past 3 months?",                      opts:["This is new to me","1–3 shoots","4–10 shoots","More than 10 shoots"] },
-  { q:"How many people are usually on your crew?",                                      opts:["Just me","Me plus 1 or 2 people","A small team of 3–5","It changes a lot"] },
-  { q:"What is the hardest part of a shoot day for you?",                                opts:["Setting up and moving gear","Getting the lighting right","Shoots running long","Keeping the client happy"] },
-  { q:"How do you usually move the camera?",                                            opts:["Mostly handheld","I use a gimbal or stabilizer","I use a slider or dolly","I keep the camera still — no movement"] },
-  { q:"What do you do when you need a specific camera move?",                           opts:["I do it myself, even if it takes a few tries","I hire someone to run the camera","I skip it — too hard alone","I plan shots that don't need movement"] },
-  { q:"Think about your last 5 shoots. How many times did a camera move not go as planned?", opts:["None","1–2 times","3 or more times","I don't try moves that could fail"] },
-  { q:"What do you do if a camera move doesn't work the first time?",                   opts:["I try again until it's right","I make the move simpler","I cut the shot","I fix it later with digital zoom"] },
-  { q:"How much extra time does a failed camera move usually add to your shoot?",       opts:["None — rarely a problem","Under 30 minutes","30 minutes to 2 hours","More than 2 hours"] },
-  { q:"What's one thing that would make your shoots faster or easier?",                 opts:["Less gear to carry","More people on set","More time per shoot","Less back and forth with the client"] },
-  { q:"Who decides when to buy new camera gear?",                                       opts:["Just me","Me and my team together","A producer, agency, or client above me","It depends on the project"] }
+  { q:"What kind of video work do you do most?",                                                         opts:["Short social content for brands","TV commercials / longer ads","Product & e-commerce videos","Music videos / creative projects"] },
+  { q:"How big is your crew on a typical shoot?",                                                        opts:["Just me — I do everything solo","Me + 1 or 2 people","Small team of 3–5","It varies a lot by project"] },
+  { q:"What's the hardest part of your shooting day?",                                                   opts:["Setting up and moving gear between shots","Getting the lighting right","Managing time — shoots run long","Keeping the client happy on set"] },
+  { q:"How do you usually handle camera movement?",                                                      opts:["I mostly shoot handheld","I use a gimbal or stabilizer","I use a slider or dolly","I keep the camera static — no movement"] },
+  { q:"When you need a specific camera move, what happens?",                                             opts:["I do it myself — it takes a few tries","I hire someone to operate the camera","I skip it — too complicated solo","I plan shots that don't need movement"] },
+  { q:"Have you ever wanted a shot to move a specific way, but couldn't get it right?",                  opts:["Yes, often — it's frustrating","Sometimes — depends on the shoot","Rarely — I plan around it","No — I always find a way"] },
+  { q:"If a camera move doesn't work the first time, what do you do?",                                   opts:["I try again until it feels right","I simplify the move","I cut the shot from the plan","I use AI motion tools to generate the camera movement"] },
+  { q:"If your camera could repeat the exact same move every time, how useful would that be?",           opts:["Very useful — I'd use it constantly","Useful for certain projects","Not sure — depends on the workflow","Not for me — I prefer the natural feel"] },
+  { q:"What would make your shoots faster and less stressful?",                                          opts:["Less gear to set up and carry","A way to plan shots before arriving on set","More control over camera movement","Better tools for solo shooting"] },
+  { q:"What does your ideal shooting setup look like in 2–3 years?",                                     opts:["Smaller, smarter gear — less to carry","More automation so I can focus on the creative","A bigger crew and bigger budget","Pretty much the same as now — it works"] }
 ];
-
-// Question count in the intro is derived from this array, not hardcoded
-document.getElementById('q-count').textContent = '✦ ' + QUESTIONS.length + ' questions';
 
 /* ════════════════════════════════
    STATE
@@ -269,10 +250,9 @@ let mode      = 'normal';
 let current   = 0;
 let animating = false;
 const DUR     = 440;
-const TY      = QUESTIONS.length + 2;   // + email slide + thank-you slide
+const TY      = 12;
 const answers = {};       // { 1: 'answer text', '1-other': '...' }
 const games   = {};       // { slideN: gameState }
-let totalHits = 0;        // gamification: shots landed across whole survey
 
 /* ════════════════════════════════
    THEME
@@ -301,8 +281,8 @@ function isDark() { return html.getAttribute('data-theme') === 'dark'; }
 ════════════════════════════════ */
 function startMode(m) {
   mode = m;
-  // Remove any previously built question slides
-  for (let i = 1; i <= QUESTIONS.length; i++) {
+  // Remove any previously built question slides (1–10)
+  for (let i = 1; i <= 10; i++) {
     const old = document.getElementById('slide-' + i);
     if (old) old.remove();
   }
@@ -317,7 +297,7 @@ function startMode(m) {
    BUILD SLIDES
 ════════════════════════════════ */
 function buildSlides() {
-  const anchor = document.getElementById('slide-' + (QUESTIONS.length + 1));
+  const anchor = document.getElementById('slide-11');
   QUESTIONS.forEach((qd, i) => {
     const n   = i + 1;
     const div = document.createElement('div');
@@ -337,7 +317,7 @@ function normalHTML(qd, n) {
   const backDest = n === 1 ? 0 : n - 1;
   return `<div class="card">
     <div class="progress" id="prog-${n}"></div>
-    <div class="step-label">Question ${n} of ${QUESTIONS.length}</div>
+    <div class="step-label">Question ${n} of 10</div>
     <div class="question">${qd.q}</div>
     <div class="options" data-q="${n}">${opts}</div>
     <div class="other-label">Or tell me in your own words 👇</div>
@@ -357,7 +337,7 @@ function gameHTML(qd, n) {
   const backDest = n === 1 ? 0 : n - 1;
   return `<div class="card">
     <div class="progress" id="prog-${n}"></div>
-    <div class="step-label">Question ${n} of ${QUESTIONS.length}</div>
+    <div class="step-label">Question ${n} of 10</div>
     <div class="question">${qd.q}</div>
     <div class="game-wrap">
       <canvas class="game-canvas" id="canvas-${n}"></canvas>
@@ -397,13 +377,11 @@ function goTo(next) {
   toEl.style.opacity      = '1'; toEl.style.pointerEvents = 'all';
   toEl.classList.add('active');
 
-  if (mode === 'game' && games[current]) stopLoop(games[current]);
-
   setTimeout(() => {
     fromEl.classList.remove('active');
     fromEl.style.cssText = '';
     animating = false;
-    if (mode === 'game' && next >= 1 && next <= QUESTIONS.length) initCanvas(next);
+    if (mode === 'game' && next >= 1 && next <= 10) initCanvas(next);
   }, DUR + 20);
 
   current = next;
@@ -415,11 +393,11 @@ function goTo(next) {
    PROGRESS
 ════════════════════════════════ */
 function updateProgress() {
-  for (let i = 1; i <= QUESTIONS.length; i++) {
+  for (let i = 1; i <= 10; i++) {
     const el = document.getElementById('prog-' + i);
     if (!el) continue;
     el.innerHTML = '';
-    for (let d = 1; d <= QUESTIONS.length; d++) {
+    for (let d = 1; d <= 10; d++) {
       const dot = document.createElement('div');
       dot.className = 'dot' + (d < i ? ' done' : d === i ? ' current' : '');
       const dest = d;
@@ -436,17 +414,6 @@ function pick(btn, q) {
   document.querySelectorAll('[data-q="'+q+'"] .option').forEach(o => o.classList.remove('selected'));
   btn.classList.add('selected');
   answers[q] = btn.querySelector('.option-dot').nextSibling.textContent.trim();
-}
-
-/* ════════════════════════════════
-   EMAIL SLIDE — CALL OPT-IN
-   Turns the passive "leave your email" ask into a real commitment
-   signal: are they open to a call, or only casually interested?
-════════════════════════════════ */
-function pickCallOptin(btn, val) {
-  document.querySelectorAll('#call-optin-group .option').forEach(o => o.classList.remove('selected'));
-  btn.classList.add('selected');
-  answers['call-optin'] = val === 'call' ? 'Open to a call' : 'Updates only';
 }
 
 /* ════════════════════════════════
@@ -480,7 +447,7 @@ function updateChips(q, idx) {
    RESTORE
 ════════════════════════════════ */
 function restoreAnswers(n) {
-  if (n < 1 || n > QUESTIONS.length) return;
+  if (n < 1 || n > 10) return;
   const saved = answers[n];
   if (!saved) return;
   if (mode === 'normal') {
@@ -500,63 +467,13 @@ document.addEventListener('input', e => {
 });
 
 /* ════════════════════════════════
-   SOUND — tiny synthesized SFX, no external assets
-════════════════════════════════ */
-let audioCtx = null;
-function getAudioCtx() {
-  if (!audioCtx) {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    catch (e) { audioCtx = null; }
-  }
-  return audioCtx;
-}
-function tone(freq, dur, type, vol, delay) {
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-  const t0 = ctx.currentTime + (delay || 0);
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = type || 'sine';
-  osc.frequency.setValueAtTime(freq, t0);
-  osc.frequency.exponentialRampToValueAtTime(Math.max(freq * 0.6, 40), t0 + dur);
-  gain.gain.setValueAtTime(0, t0);
-  gain.gain.linearRampToValueAtTime(vol, t0 + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-  osc.connect(gain); gain.connect(ctx.destination);
-  osc.start(t0); osc.stop(t0 + dur + 0.03);
-}
-function playShoot() { tone(520, 0.14, 'triangle', 0.10); }
-function playHit()   { tone(920, 0.09, 'square', 0.09); tone(1400, 0.16, 'sine', 0.10, 0.03); }
-function playMilestone() { [0,0.08,0.16].forEach((d,i)=>tone(660+i*220,0.18,'sine',0.11,d)); }
-
-/* ════════════════════════════════
    ARCHERY ENGINE
 ════════════════════════════════ */
 const TARGET_COLORS = ['#dc0008','#0071e3','#22c55e','#f59e0b'];
-const HIT_PHRASES = ['Bullseye!','Nice shot!','Great aim!','On target!','Boom!','Sharp eye!'];
-
-function spawnBurst(g, x, y, color, count) {
-  for (let i = 0; i < (count || 20); i++) {
-    const a = Math.random() * Math.PI * 2;
-    const speed = 70 + Math.random() * 130;
-    g.particles.push({
-      x, y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed,
-      life: 0.5 + Math.random() * 0.4, maxLife: 0.9,
-      size: 1.5 + Math.random() * 2.5, color
-    });
-  }
-}
-function spawnFloatText(g, x, y, text, color) {
-  g.floatTexts.push({ x, y, text, color, life: 1, maxLife: 1 });
-}
-function shake(g, mag) { g.shake = { mag, life: 0.28 }; }
 
 function initCanvas(n) {
   const canvas = document.getElementById('canvas-' + n);
   if (!canvas) return;
-
-  // Stop any previously running loop tied to this game slot
-  if (games[n] && games[n].rafId) cancelAnimationFrame(games[n].rafId);
 
   const W  = canvas.offsetWidth;
   const H  = 200;
@@ -570,32 +487,18 @@ function initCanvas(n) {
   const pad = 48, spacing = (W - pad*2) / 3;
   const targets = QUESTIONS[n-1].opts.map((_, i) => ({
     x: pad + i * spacing,
-    y: 74, cy: 74,
+    y: 68,
     r: 26,
-    idx: i,
-    hitAt: -1   // time.now() when hit, for pop-in animation
-  }));
-
-  const dust = Array.from({ length: 14 }, () => ({
-    x: Math.random() * W, y: Math.random() * H,
-    r: 0.6 + Math.random() * 1.4,
-    phase: Math.random() * Math.PI * 2,
-    speed: 0.15 + Math.random() * 0.25
+    idx: i
   }));
 
   // Arrow starts at bottom-center
   const g = {
-    ctx, W, H, n, targets, dust,
-    arrow: { x: W/2, y: H - 18, angle: -Math.PI/2, flying: false,
-             startX:0, startY:0, tx: 0, ty: 0, progress: 0, targetIdx: -1 },
-    trail: [],
-    particles: [],
-    floatTexts: [],
-    shake: { mag: 0, life: 0 },
-    hitIdx: -1,   // which target currently shows as hit (-1 = none)
-    startTime: performance.now(),
-    lastTime: performance.now(),
-    rafId: null
+    ctx, W, H, n, targets,
+    arrow: { x: W/2, y: H - 18, angle: 0, flying: false,
+             tx: 0, ty: 0, progress: 0, targetIdx: -1 },
+    hitIdx: -1,  // which target was last hit (-1 = none)
+    animFrame: null
   };
   games[n] = g;
 
@@ -604,13 +507,16 @@ function initCanvas(n) {
     const rect = canvas.getBoundingClientRect();
     const mx = (e.clientX - rect.left);
     const my = (e.clientY - rect.top);
+    // Check if click hits a target area
     for (const t of g.targets) {
-      if (Math.hypot(mx - t.x, my - t.cy) < t.r + 14) {
+      if (Math.hypot(mx - t.x, my - t.y) < t.r + 14) {
         shootArrow(g, t.idx, true);
         return;
       }
     }
+    // Otherwise just aim the arrow toward cursor
     g.arrow.angle = Math.atan2(my - g.arrow.y, mx - g.arrow.x);
+    render(g);
   });
 
   // Mouse move to aim
@@ -620,78 +526,17 @@ function initCanvas(n) {
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
     g.arrow.angle = Math.atan2(my - g.arrow.y, mx - g.arrow.x);
+    render(g);
   });
-  canvas.addEventListener('mouseleave', () => { if (!g.arrow.flying) g.arrow.angle = -Math.PI/2; });
 
   // Restore previously selected target if answer exists
   const savedAns = answers[n];
   if (savedAns) {
     const idx = QUESTIONS[n-1].opts.indexOf(savedAns);
-    if (idx >= 0) { g.hitIdx = idx; g.targets[idx].hitAt = performance.now() - 999; }
+    if (idx >= 0) g.hitIdx = idx;
   }
 
-  startLoop(g);
-}
-
-function startLoop(g) {
-  g.lastTime = performance.now();
-  function frame(now) {
-    const dt = Math.min((now - g.lastTime) / 1000, 0.05);
-    g.lastTime = now;
-    update(g, now, dt);
-    render(g, now);
-    g.rafId = requestAnimationFrame(frame);
-  }
-  g.rafId = requestAnimationFrame(frame);
-}
-function stopLoop(g) { if (g && g.rafId) { cancelAnimationFrame(g.rafId); g.rafId = null; } }
-
-function update(g, now, dt) {
-  // Idle bob for each target
-  g.targets.forEach(t => { t.cy = t.y + Math.sin(now / 550 + t.idx * 0.8) * 3; });
-
-  // Arrow flight
-  const a = g.arrow;
-  if (a.flying) {
-    a.progress += dt * 2.35;
-    if (a.progress >= 1) {
-      a.progress = 1; a.flying = false;
-      const t = g.targets[a.targetIdx];
-      a.x = t.x; a.y = t.cy;
-      g.hitIdx = a.targetIdx;
-      t.hitAt = now;
-      totalHits++;
-      spawnBurst(g, t.x, t.cy, TARGET_COLORS[a.targetIdx], 24);
-      spawnFloatText(g, t.x, t.cy - t.r - 10, HIT_PHRASES[Math.floor(Math.random()*HIT_PHRASES.length)], TARGET_COLORS[a.targetIdx]);
-      shake(g, 5);
-      playHit();
-      if (totalHits % 5 === 0) { spawnBurst(g, g.W/2, g.H/2, '#f59e0b', 30); playMilestone(); }
-      g.trail.length = 0;
-      if (a._fromCanvas) canvasPick(g.n, a.targetIdx);
-    } else {
-      const px = a.startX + (a.tx - a.startX) * a.progress;
-      const py = a.startY + (a.ty - a.startY) * a.progress - Math.sin(a.progress * Math.PI) * 34;
-      g.trail.push({ x: px, y: py, life: 1 });
-    }
-  }
-  // Trail decay
-  g.trail.forEach(p => p.life -= dt * 3.2);
-  g.trail = g.trail.filter(p => p.life > 0);
-
-  // Particles
-  g.particles.forEach(p => {
-    p.x += p.vx * dt; p.y += p.vy * dt;
-    p.vy += 260 * dt; p.vx *= 0.98;
-    p.life -= dt;
-  });
-  g.particles = g.particles.filter(p => p.life > 0);
-
-  // Floating texts
-  g.floatTexts.forEach(f => { f.y -= 26 * dt; f.life -= dt * 1.1; });
-  g.floatTexts = g.floatTexts.filter(f => f.life > 0);
-
-  // Shake decay
-  if (g.shake.life > 0) g.shake.life -= dt; else g.shake.mag = 0;
+  render(g);
 }
 
 /* ── SHOOT ── */
@@ -701,85 +546,62 @@ function shootArrow(g, targetIdx, fromCanvas) {
   const a = g.arrow;
 
   a.flying = true;
-  a._fromCanvas = fromCanvas;
   a.startX = a.x; a.startY = a.y;
-  a.tx = t.x; a.ty = t.cy;
+  a.tx = t.x; a.ty = t.y;
   a.progress = 0;
   a.targetIdx = targetIdx;
-  g.trail.length = 0;
 
   // Clear previous hit visually — all targets reset, new one will show
   g.hitIdx = -1;
-  playShoot();
+
+  function step() {
+    a.progress += 0.055;
+    if (a.progress >= 1) {
+      a.progress = 1;
+      a.flying   = false;
+      a.x = t.x; a.y = t.y;  // park arrow at target
+      g.hitIdx = targetIdx;
+      // Notify
+      if (fromCanvas) canvasPick(g.n, targetIdx);
+      render(g);
+      return;
+    }
+    render(g);
+    g.animFrame = requestAnimationFrame(step);
+  }
+  g.animFrame = requestAnimationFrame(step);
 }
 
 /* ── RENDER ── */
-function render(g, now) {
-  now = now || performance.now();
+function render(g) {
   const { ctx, W, H, targets, arrow, hitIdx } = g;
+  ctx.clearRect(0, 0, W, H);
+
   const dark = isDark();
   const textCol   = dark ? '#f5f5f7' : '#1d1d1f';
   const subCol    = dark ? '#a1a1a6' : '#86868b';
   const surfCol   = dark ? '#2c2c2e' : '#ffffff';
   const borderCol = dark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)';
 
-  ctx.clearRect(0, 0, W, H);
-
-  // ── Sky gradient backdrop ──
-  const sky = ctx.createLinearGradient(0, 0, 0, H);
-  if (dark) { sky.addColorStop(0, '#141418'); sky.addColorStop(1, '#0a0a0c'); }
-  else      { sky.addColorStop(0, '#eef1f5'); sky.addColorStop(1, '#e2e6ec'); }
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, W, H);
-
-  // Screen shake offset
-  const shk = g.shake.mag > 0 ? g.shake.mag * (g.shake.life / 0.28) : 0;
-  const sx = shk ? (Math.random() - 0.5) * shk : 0;
-  const sy = shk ? (Math.random() - 0.5) * shk : 0;
-  ctx.save();
-  ctx.translate(sx, sy);
-
-  // Ambient dust motes
-  ctx.globalAlpha = dark ? 0.35 : 0.25;
-  g.dust.forEach(d => {
-    const dx = (d.x + now * d.speed * 0.01) % (W + 10);
-    const dy = d.y + Math.sin(now / 900 + d.phase) * 6;
-    ctx.beginPath(); ctx.arc(dx, dy, d.r, 0, Math.PI * 2);
-    ctx.fillStyle = subCol; ctx.fill();
-  });
-  ctx.globalAlpha = 1;
-
   // ── Draw targets ──
   targets.forEach((t, i) => {
     const isHit = hitIdx === i;
     const col   = TARGET_COLORS[i];
-    const sinceHit = t.hitAt > 0 ? (now - t.hitAt) / 1000 : 999;
-    const pop = isHit ? 1 + Math.max(0, 0.32 - sinceHit) * 1.8 * Math.max(0, 1 - sinceHit * 3) : 1;
 
-    ctx.save();
-    ctx.translate(t.x, t.cy);
-    ctx.scale(pop, pop);
-
-    // Glow when hit
-    if (isHit) { ctx.shadowColor = col; ctx.shadowBlur = 18; }
-
-    // Outer ring w/ radial gradient
-    const grad = ctx.createRadialGradient(0, -t.r*0.3, 2, 0, 0, t.r);
-    if (isHit) { grad.addColorStop(0, col); grad.addColorStop(1, col); }
-    else { grad.addColorStop(0, dark ? '#3a3a3d' : '#ffffff'); grad.addColorStop(1, dark ? '#242426' : '#f0f1f3'); }
-    ctx.beginPath(); ctx.arc(0, 0, t.r, 0, Math.PI*2);
-    ctx.fillStyle = grad; ctx.fill();
+    // Outer ring
+    ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI*2);
+    ctx.fillStyle = isHit ? col : (dark ? '#2c2c2e' : '#f5f5f7');
+    ctx.fill();
     ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.stroke();
-    ctx.shadowBlur = 0;
 
     // Middle ring
-    ctx.beginPath(); ctx.arc(0, 0, t.r * 0.62, 0, Math.PI*2);
-    ctx.fillStyle = isHit ? 'rgba(255,255,255,.28)' : col + '22';
+    ctx.beginPath(); ctx.arc(t.x, t.y, t.r * 0.62, 0, Math.PI*2);
+    ctx.fillStyle = isHit ? 'rgba(255,255,255,.25)' : col + '22';
     ctx.fill();
     ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.stroke();
 
     // Bull
-    ctx.beginPath(); ctx.arc(0, 0, t.r * 0.28, 0, Math.PI*2);
+    ctx.beginPath(); ctx.arc(t.x, t.y, t.r * 0.28, 0, Math.PI*2);
     ctx.fillStyle = isHit ? '#fff' : col;
     ctx.fill();
 
@@ -787,89 +609,68 @@ function render(g, now) {
     ctx.font = `800 ${Math.round(t.r * 0.72)}px Inter, sans-serif`;
     ctx.fillStyle = isHit ? col : surfCol;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(LETTERS[i], 0, 0);
-    ctx.restore();
+    ctx.fillText(LETTERS[i], t.x, t.y);
 
-    // Answer label BELOW target (not scaled, stays crisp)
+    // Answer label BELOW target
     ctx.font = `500 10px Inter, sans-serif`;
     ctx.fillStyle = isHit ? col : subCol;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     const label = QUESTIONS[g.n-1].opts[i];
     const short = label.length > 18 ? label.slice(0,16) + '…' : label;
     ctx.fillText(short, t.x, t.y + t.r + 6);
-
-    // Subtle hover ring pulse for un-hit targets (idle life)
-    if (!isHit) {
-      const pulse = (Math.sin(now / 700 + i) + 1) / 2;
-      ctx.beginPath(); ctx.arc(t.x, t.cy, t.r + 4 + pulse * 2, 0, Math.PI*2);
-      ctx.strokeStyle = col + '18'; ctx.lineWidth = 1; ctx.stroke();
-    }
   });
-
-  // ── Particles (impact debris) ──
-  g.particles.forEach(p => {
-    ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-    ctx.fillStyle = p.color; ctx.fill();
-  });
-  ctx.globalAlpha = 1;
-
-  // ── Arrow motion trail ──
-  g.trail.forEach(p => {
-    ctx.globalAlpha = Math.max(0, p.life) * 0.35;
-    ctx.beginPath(); ctx.arc(p.x, p.y, 2.5, 0, Math.PI*2);
-    ctx.fillStyle = '#ffb020'; ctx.fill();
-  });
-  ctx.globalAlpha = 1;
 
   // ── Draw bow ──
-  const bowX = arrow.flying ? (arrow.startX || W/2) : W/2;
+  const bowX = arrow.flying ? arrow.startX || W/2 : W/2;
   const bowY = H - 18;
-  const bowGrad = ctx.createLinearGradient(bowX-4, bowY-20, bowX+4, bowY+20);
-  bowGrad.addColorStop(0, '#a9673a'); bowGrad.addColorStop(1, '#6b3f21');
+  // Bow arc
   ctx.save();
   ctx.beginPath();
   ctx.arc(bowX, bowY, 20, -Math.PI * 0.7, -Math.PI * 0.3);
-  ctx.strokeStyle = bowGrad; ctx.lineWidth = 4;
+  ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4;
   ctx.lineCap = 'round'; ctx.stroke();
   ctx.restore();
-  // Bow string (pulls back slightly while aiming, snaps on shoot)
-  const pull = arrow.flying ? 0 : 3;
+  // Bow string
   ctx.beginPath();
-  ctx.moveTo(bowX - 14, bowY - 12); ctx.lineTo(bowX, bowY - 12 + pull); ctx.lineTo(bowX + 14, bowY - 12);
+  ctx.moveTo(bowX - 14, bowY - 12); ctx.lineTo(bowX + 14, bowY - 12);
   ctx.strokeStyle = borderCol; ctx.lineWidth = 1.5; ctx.stroke();
 
   // ── Draw arrow ──
   if (!arrow.flying) {
+    // Idle / aiming: arrow at bow pointing toward cursor angle
     const ax = bowX, ay = bowY - 12;
-    const ang = arrow.angle || -Math.PI/2;
+    const ang = arrow.angle || -Math.PI/2; // default straight up
     ctx.save();
     ctx.translate(ax, ay);
     ctx.rotate(ang);
-    const shaftGrad = ctx.createLinearGradient(-18,0,18,0);
-    shaftGrad.addColorStop(0, '#6b6b6b'); shaftGrad.addColorStop(1, '#c9c9c9');
+    // Shaft
     ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(18, 0);
-    ctx.strokeStyle = shaftGrad; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.strokeStyle = '#888'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+    // Head
     ctx.beginPath(); ctx.moveTo(18,0); ctx.lineTo(11,-4); ctx.lineTo(11,4); ctx.closePath();
-    ctx.fillStyle = '#d8d8d8'; ctx.fill();
+    ctx.fillStyle = '#aaa'; ctx.fill();
+    // Fletching
     ctx.beginPath(); ctx.moveTo(-14,0); ctx.lineTo(-20,-5); ctx.moveTo(-14,0); ctx.lineTo(-20,5);
     ctx.strokeStyle = '#dc0008'; ctx.lineWidth = 1.5; ctx.stroke();
     ctx.restore();
 
+    // Hint
     ctx.font = '500 10px Inter, sans-serif';
     ctx.fillStyle = subCol; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('🏹 Shoot a target — or pick below', W/2, H - 8);
+
   } else {
+    // Flying: interpolate position with arc
     const px = arrow.startX + (arrow.tx - arrow.startX) * arrow.progress;
     const py = arrow.startY + (arrow.ty - arrow.startY) * arrow.progress
-             - Math.sin(arrow.progress * Math.PI) * 34;
+             - Math.sin(arrow.progress * Math.PI) * 30;
     const ang = Math.atan2(arrow.ty - arrow.startY, arrow.tx - arrow.startX);
     ctx.save();
     ctx.translate(px, py); ctx.rotate(ang);
     ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(14, 0);
     ctx.strokeStyle = '#888'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(14,0); ctx.lineTo(8,-4); ctx.lineTo(8,4); ctx.closePath();
-    ctx.fillStyle = '#d8d8d8'; ctx.fill();
+    ctx.fillStyle = '#aaa'; ctx.fill();
     ctx.beginPath(); ctx.moveTo(-12,0); ctx.lineTo(-18,-5); ctx.moveTo(-12,0); ctx.lineTo(-18,5);
     ctx.strokeStyle = '#dc0008'; ctx.lineWidth = 1.5; ctx.stroke();
     ctx.restore();
@@ -879,37 +680,12 @@ function render(g, now) {
   if (hitIdx >= 0 && !arrow.flying) {
     const t = targets[hitIdx];
     ctx.save();
-    ctx.translate(t.x, t.cy); ctx.rotate(-Math.PI/2);
+    ctx.translate(t.x, t.y); ctx.rotate(-Math.PI/2);
     ctx.beginPath(); ctx.moveTo(0, -t.r - 14); ctx.lineTo(0, t.r * 0.2);
     ctx.strokeStyle = '#666'; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(0,-t.r-14); ctx.lineTo(-4,-t.r-7); ctx.lineTo(4,-t.r-7); ctx.closePath();
-    ctx.fillStyle = '#d8d8d8'; ctx.fill();
+    ctx.fillStyle = '#aaa'; ctx.fill();
     ctx.restore();
-  }
-
-  // ── Floating feedback text ──
-  g.floatTexts.forEach(f => {
-    ctx.globalAlpha = Math.max(0, f.life);
-    ctx.font = '800 12px Inter, sans-serif';
-    ctx.fillStyle = f.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(f.text, f.x, f.y);
-  });
-  ctx.globalAlpha = 1;
-
-  ctx.restore(); // end shake translate
-
-  // ── HUD: hit streak pill (not affected by shake) ──
-  if (totalHits > 0) {
-    const label = '🎯 ' + totalHits;
-    ctx.font = '700 10px Inter, sans-serif';
-    const tw = ctx.measureText(label).width;
-    const px = 8, py = 8, pw = tw + 16, ph = 18;
-    ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(px, py, pw, ph, 9) : ctx.rect(px, py, pw, ph);
-    ctx.fillStyle = dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
-    ctx.fill();
-    ctx.fillStyle = textCol; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText(label, px + 8, py + ph/2 + 1);
   }
 }
 
@@ -919,16 +695,22 @@ function render(g, now) {
 function submitSurvey() {
   const email = document.getElementById('email-input').value.trim();
   if (email) answers.email = email;
-  const payload = { 'Timestamp': new Date().toISOString(), 'Mode': mode };
-  QUESTIONS.forEach((qd, i) => {
-    const n = i + 1;
-    payload['Q' + n + ' - ' + qd.q] = answers[n] || '';
-    payload['Q' + n + ' - Other']   = answers[n + '-other'] || '';
-  });
-  payload['Call opt-in'] = answers['call-optin'] || '';
-  payload['Email']       = answers.email || '';
+  const payload = {
+    'Timestamp': new Date().toISOString(), 'Mode': mode,
+    'Q1 - Type of work':       answers[1]||'',  'Q1 - Other':  answers['1-other']||'',
+    'Q2 - Crew size':          answers[2]||'',  'Q2 - Other':  answers['2-other']||'',
+    'Q3 - Hardest part':       answers[3]||'',  'Q3 - Other':  answers['3-other']||'',
+    'Q4 - Camera movement':    answers[4]||'',  'Q4 - Other':  answers['4-other']||'',
+    'Q5 - When needing move':  answers[5]||'',  'Q5 - Other':  answers['5-other']||'',
+    'Q6 - Shot not working':   answers[6]||'',  'Q6 - Other':  answers['6-other']||'',
+    'Q7 - Move fails':         answers[7]||'',  'Q7 - Other':  answers['7-other']||'',
+    'Q8 - Repeatable move':    answers[8]||'',  'Q8 - Other':  answers['8-other']||'',
+    'Q9 - Faster shoots':      answers[9]||'',  'Q9 - Other':  answers['9-other']||'',
+    'Q10 - Ideal setup':       answers[10]||'', 'Q10 - Other': answers['10-other']||'',
+    'Email': answers.email||''
+  };
   themeBtn.style.display = 'none';
-  goTo(TY);
+  goTo(12);
   fetch(SHEET_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
     .catch(e => console.error(e));
 }
